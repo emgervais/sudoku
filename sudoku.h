@@ -18,9 +18,11 @@ typedef struct s_case
     int y;
     int pos;
     int number;
+    int nbr;
 	struct s_case	*next;
     struct s_case   *right;
     struct s_case   *down;
+    struct s_case   *back;
 }					t_case;
 
 typedef struct s_img
@@ -52,5 +54,6 @@ typedef struct s_sud
 }               t_sud;
 
 void set_map(t_sud *sud, bool reset);
+void open_solution(t_sud *sud);
 
 #endif

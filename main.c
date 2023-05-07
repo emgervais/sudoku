@@ -17,6 +17,7 @@ int check_double(int *nums)
 int is_valid(t_sud *sud)
 {
     t_case *temp = sud->list;
+    t_case *temp2;
     int *nums = malloc(sizeof(int) * 10);
     nums[9] = 0;
     while(temp)
@@ -26,15 +27,39 @@ int is_valid(t_sud *sud)
         {
             nums[i++] = temp->number;
             if(temp->number == 0)
+            {
+                free(nums);
                 return(0);
+            }
             temp = temp->right;
             if(!temp)
                 break;
         }
         if(!check_double(nums))
+        {
+            free(nums);
             return(0);
+        }
         temp = temp->next;
     }
+    temp = sud->list;
+    while(temp)
+    {
+        int i = 0;
+        temp2 = temp;
+        while(i < 9)
+        {
+            nums[i++] = temp2->number;
+            temp2 = temp2->down;
+        }
+        if(!check_double(nums))
+        {
+            free(nums);
+            return(0);
+        }
+        temp = temp->right;
+    }
+    free(nums);
     return(1);
 }
 void init_texture(t_sud *sud)
@@ -140,13 +165,6 @@ int is_locked(t_sud *sud, int pos)
 void controls(void *param)
 {
     t_sud *sud = param;
-    if(mlx_is_key_down(sud->mlx, MLX_KEY_C))
-    {
-        if(is_valid(sud))
-            printf("congratz sudoku done\n");
-        else
-            printf("failed, press r to start again\n");
-    }
     if(mlx_is_key_down(sud->mlx, MLX_KEY_ESCAPE))
         mlx_close_window(sud->mlx);
     if(mlx_is_key_down(sud->mlx, MLX_KEY_R))
@@ -199,9 +217,11 @@ void init_grille(t_sud *sud)
     {
         sud->list = malloc(sizeof(t_case));
         sud->list->next = NULL;
+        sud->list->back = NULL;
         sud->list->pos = 11;
         sud->list->x = 10;
         sud->list->y = 10;
+        sud->list->nbr = 0;
     }
     t_case *temp = sud->list;
     while(temp->next)
@@ -218,9 +238,11 @@ void init_grille(t_sud *sud)
     t_case *new = malloc(sizeof(t_case));
     temp->next = new;
     new->next = NULL;
+    new->back = temp;
     new->pos = (y + 1) * 10 + x + 1;
     new->x = x * 100 + 10;
     new->y = y * 100 + 10;
+    new->nbr = 0;
     if(x == 8)
         new->right = NULL;
     if(y == 8)
@@ -309,13 +331,14 @@ void set_map(t_sud *sud, bool reset)
     init_back(sud);
     temp = sud->list;
     int l = 0;
-    int fd = open("./maps/valid.txt", O_RDONLY);
+    int fd = open("./maps/medium1.txt", O_RDONLY);
     char *buf = malloc(sizeof(char));
     while(read(fd, buf, 1))
     {
         if(buf[0] >= '0' && buf[0] <= '9')
         {
             temp->number = buf[0] - 48;
+            temp->nbr = temp->number;
             if(buf[0] != '0')
             {
                 find_num(temp, buf[0] - 48, sud);
@@ -338,26 +361,23 @@ void row(t_case *first)
         temp2 = temp2->next;
     }
 }
-void column(t_case *first, int column)
+void column(t_case *first)
 {
     t_case *temp = first;
-    t_case *temp2;
+    t_case *temp2 = temp;
     int i = 1;
-    while(i++ != column)
-        temp = temp->next;
-    temp2 = temp;
-    while(temp2)
+    while(i)
     {
-        i = 0;
-        while(i < 9)
+        i = 1;
+        while(i < 10)
         {
             temp2 = temp2->next;
             if(!temp2)
-                break ;
+                return ;
             i++;
         }
         temp->down = temp2;
-        temp = temp->down;
+        temp = temp2;
     }
 }
 void init_line(t_sud *sud)
@@ -368,11 +388,110 @@ void init_line(t_sud *sud)
     {
         if(i % 9 == 1)
             row(temp);
-        else if(i < 10)
-            column(temp, i);
+        if(i < 10)
+            column(temp);
         i++;
         temp = temp->next;
     }
+}
+void open_solution(t_sud *sud)
+{
+    t_case *temp = sud->list;
+    int i;
+    while(temp)
+    {
+        i = 0;
+        while(i++ < 9)
+        {
+            printf("%d ", temp->nbr);
+            temp = temp->next;
+        }
+        printf("\n");
+    }
+}
+int check(int *nums)
+{
+    int i = 0;
+    int k;
+    while(i < 9)
+    {
+        k = 0;
+        while(k < i)
+            if(nums[i] == nums[k++] && nums[i])
+                return(0);
+        i++;
+    }
+    return(1);
+}
+int check_ans(t_sud *sud, int row, int column)
+{
+    t_case *temp = sud->list;
+    int *nums = malloc(sizeof(int) * 9);
+    int i = 0;
+    while(temp->pos / 10 != row)
+        temp = temp->next;
+    while(temp)
+    {
+        nums[i++] = temp->nbr;
+        temp=temp->right;
+    }
+    if(!check(nums))
+    {
+        free(nums);
+        return(0);
+    }
+    temp = sud->list;
+    i = 0;
+    while(temp->pos % 10 != column)
+        temp = temp->next;
+    while(temp)
+    {
+        nums[i++] = temp->nbr;
+        temp = temp->down;
+    }
+    if(!check(nums))
+    {
+        free(nums);
+        return(0);
+    }
+    free(nums);
+    return(1);
+}
+void make_sol(t_sud *sud)
+{
+    t_case *temp = sud->list;
+
+    while(temp)
+    {
+        while(!is_locked(sud, temp->pos))
+            temp = temp->next;
+        temp->nbr += 1;
+        if(check_ans(sud, temp->pos / 10, temp->pos % 10))
+            temp = temp->next;
+        else
+        {
+            while(temp->nbr == 9)
+            {
+                temp->nbr = 0;
+                while(!is_locked(sud, temp->back->pos))
+                    temp = temp->back;
+                temp = temp->back;
+            }
+        }
+    }
+}
+void correct(mlx_key_data_t keydata, void* param)
+{
+    t_sud *sud = param;
+    if(keydata.key == MLX_KEY_C && keydata.action == MLX_PRESS)
+    {
+        if(is_valid(sud))
+            printf("congratz sudoku done\n");
+        else
+            printf("failed, press r to start again\n");
+    }
+    if(keydata.key == MLX_KEY_S && keydata.action == MLX_PRESS)
+        open_solution(sud);
 }
 int main()
 {
@@ -388,9 +507,11 @@ int main()
     init_line(sud);
     init_texture(sud);
     set_map(sud, 0);
+    make_sol(sud);
     mlx_cursor_hook(sud->mlx, &mouse, sud);
     mlx_mouse_hook(sud->mlx, &click, sud);
     mlx_loop_hook(sud->mlx, &controls, sud);
+    mlx_key_hook(sud->mlx, &correct, sud);
     mlx_loop(sud->mlx);
     mlx_terminate(sud->mlx);
 return (0);
