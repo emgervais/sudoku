@@ -167,8 +167,6 @@ void controls(void *param)
     t_sud *sud = param;
     if(mlx_is_key_down(sud->mlx, MLX_KEY_ESCAPE))
         mlx_close_window(sud->mlx);
-    if(mlx_is_key_down(sud->mlx, MLX_KEY_R))
-        set_map(sud, 1);
     if(mlx_is_key_down(sud->mlx, MLX_KEY_SPACE) && is_locked(sud, sud->selected))
         set_nbr(sud, 0);
     if(mlx_is_key_down(sud->mlx, MLX_KEY_1) && is_locked(sud, sud->selected))
@@ -492,6 +490,11 @@ void correct(mlx_key_data_t keydata, void* param)
     }
     if(keydata.key == MLX_KEY_S && keydata.action == MLX_PRESS)
         open_solution(sud);
+    if(keydata.key == MLX_KEY_R && keydata.action == MLX_PRESS)
+    {
+        set_map(sud, 1);
+        make_sol(sud);
+    }
 }
 int main()
 {
