@@ -421,11 +421,32 @@ int check(int *nums)
     }
     return(1);
 }
+int find_first(int col, int row)
+{
+    int r;
+    int c = 4;
+    int i = 0;
+    while(c <= 10)
+    {
+        r = 4;
+        while(r <= 10)
+        {
+            if(col < c && row < r)
+                return(i);
+            i += 3;
+            r += 3;
+        }
+        i += 18;
+        c += 3;
+    }
+    return(i);
+}
 int check_ans(t_sud *sud, int row, int column)
 {
     t_case *temp = sud->list;
     int *nums = malloc(sizeof(int) * 9);
     int i = 0;
+    int y = -1;
     while(temp->pos / 10 != row)
         temp = temp->next;
     while(temp)
@@ -452,9 +473,30 @@ int check_ans(t_sud *sud, int row, int column)
         free(nums);
         return(0);
     }
+    temp = sud->list;
+    i = find_first(column, row);
+    //printf("col %d row %d first %d\n", column, row, i);
+    while(++y < i)
+        temp = temp->next;
+    y = 0;
+    while(y < 9)
+    {
+        i = -1;
+        if(y % 3 == 0 && y != 0)
+            while(++i < 6)
+                temp = temp->next;
+        nums[y++] = temp->nbr;
+        temp = temp->next;
+    }
+    if(!check(nums))
+    {
+        free(nums);
+        return(0);
+    }
     free(nums);
     return(1);
 }
+
 void make_sol(t_sud *sud)
 {
     t_case *temp = sud->list;
@@ -496,6 +538,7 @@ void correct(mlx_key_data_t keydata, void* param)
         make_sol(sud);
     }
 }
+
 int main()
 {
     int i = 0;

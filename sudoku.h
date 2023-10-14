@@ -1,7 +1,7 @@
 #ifndef SUDOKU_H
 # define SUDOKU_H
 
-# include "../../MLX42/include/MLX42/MLX42.h"
+# include "./MLX42/include/MLX42/MLX42.h"
 # include <stdio.h>
 # include <stdlib.h>
 #include <fcntl.h>
@@ -19,6 +19,7 @@ typedef struct s_case
     int pos;
     int number;
     int nbr;
+    struct s_case   *box[9];
 	struct s_case	*next;
     struct s_case   *right;
     struct s_case   *down;

@@ -12,7 +12,7 @@
 
 NAME	:= sudoku
 CFLAGS	:= -Wextra -Wall -O3 -fsanitize=address -g
-LIBMLX	:= ../../MLX42
+LIBMLX	:= ./MLX42
 
 LIBS	:= $(LIBMLX)/build/libmlx42.a -lm -lglfw -pthread -ldl
 SRCS	:= main.c
