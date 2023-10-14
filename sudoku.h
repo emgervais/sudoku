@@ -48,6 +48,7 @@ typedef struct s_sud
     t_img *img;
     mlx_t *mlx;
     t_case *list;
+    char *map;
     int x;
     int y;
     int selected;

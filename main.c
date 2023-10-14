@@ -329,7 +329,9 @@ void set_map(t_sud *sud, bool reset)
     init_back(sud);
     temp = sud->list;
     int l = 0;
-    int fd = open("./maps/medium1.txt", O_RDONLY);
+    int fd = open(sud->map, O_RDONLY);
+    if(fd < 0)
+        exit(1);
     char *buf = malloc(sizeof(char));
     while(read(fd, buf, 1))
     {
@@ -503,8 +505,10 @@ void make_sol(t_sud *sud)
 
     while(temp)
     {
-        while(!is_locked(sud, temp->pos))
+        while(temp && !is_locked(sud, temp->pos))
             temp = temp->next;
+        if(!temp)
+            return ;
         temp->nbr += 1;
         if(check_ans(sud, temp->pos / 10, temp->pos % 10))
             temp = temp->next;
@@ -539,13 +543,16 @@ void correct(mlx_key_data_t keydata, void* param)
     }
 }
 
-int main()
+int main(int ac, char **av)
 {
+    if(ac != 2)
+        return(printf("please insert map path\n"), 1);
     int i = 0;
     t_sud *sud = malloc(sizeof(t_sud));
     sud->img = malloc(sizeof(t_img));
     sud->locked = malloc(sizeof(int) * 82);
     sud->list = NULL;
+    sud->map = av[1];
     sud->selected = 0;
     sud->mlx = mlx_init(WIDTH, HEIGHT, "Sudoku", true);
     while(i++ < 80)
